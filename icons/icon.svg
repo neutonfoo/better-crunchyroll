@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
   <defs>
-    <!-- Dusk sky: warm peach fading through rose into soft violet -->
+    <!-- Sunset orange: soft amber into Crunchyroll orange into a deep ember -->
     <linearGradient id="sky" x1="0.15" y1="0" x2="0.85" y2="1">
-      <stop offset="0" stop-color="#FFC09A"/>
-      <stop offset="0.48" stop-color="#EE8FA6"/>
-      <stop offset="1" stop-color="#7A66D6"/>
+      <stop offset="0" stop-color="#FFB86B"/>
+      <stop offset="0.5" stop-color="#F47521"/>
+      <stop offset="1" stop-color="#D9431C"/>
     </linearGradient>
     <radialGradient id="glow" cx="0.28" cy="0.2" r="0.75">
       <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.38"/>
@@ -19,7 +19,7 @@
       <circle cx="75" cy="54" r="27" fill="#000"/>
     </mask>
     <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#4B2E83" flood-opacity="0.28"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#8A2A0A" flood-opacity="0.3"/>
     </filter>
   </defs>
 
