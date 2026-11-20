@@ -1,5 +1,7 @@
 # Better Crunchyroll
 
+![Cinema mode: full-width video with the controls below the picture](docs/cinema-mode.jpg)
+
 A small Chrome extension that improves the Crunchyroll web player. It adds two buttons to the player's control bar, styled to match the native ones:
 
 - **Cinema mode** (moon): the player fills the window with the picture full-width and centred, the controls sit below the picture instead of over the subtitles, and the rest of the page is darkened. The controls still auto-hide like the native player. The setting is remembered across episodes; Esc turns it off.
