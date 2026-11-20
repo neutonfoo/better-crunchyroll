@@ -1,20 +1,6 @@
-/* ---- Moon button (lives in the player's control bar) ---- */
-.bcr-moon {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  padding: 0;
-  margin: 0;
-  border: 0;
-  background: transparent;
-  color: #fff;
-  cursor: pointer;
-  opacity: 0.9;
-}
-.bcr-moon:hover { opacity: 1; }
-.bcr-moon svg { width: 60%; height: 60%; pointer-events: none; }
-.bcr-moon[aria-pressed="true"] { color: #f47521; }
+/* ---- Moon button: styled by the player's own classes, cloned at runtime ---- */
+.bcr-moon[aria-pressed="true"] { color: #f47521 !important; }
+.bcr-moon svg { pointer-events: none; }
 
 /* ---- Player: pinned to the viewport ---- */
 .bcr-fill {
@@ -32,14 +18,15 @@
 /* ---- Player: centred picture, overlay controls lifted to sit just below it ---- */
 .bcr-root { background: #000 !important; }
 .bcr-media {
-  transform: scale(var(--bcr-scale, 1)) !important;
-  transform-origin: 50% 50% !important;
+  transform: translateY(var(--bcr-shift, 0px)) !important;
   transition: transform 0.25s ease !important;
 }
 .bcr-controls {
   transform: translateY(var(--bcr-lift, 0px)) !important;
   transition: transform 0.25s ease !important;
 }
+/* Controls have their own strip now, so stop them auto-hiding. */
+.bcr-controls [data-testid="bottom-controls-autohide"] { opacity: 1 !important; }
 
 /* ---- Page: darken everything that isn't the player ---- */
 html.bcr-cinema,
