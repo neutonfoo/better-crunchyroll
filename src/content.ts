@@ -84,7 +84,7 @@ function findAnchor(video: HTMLVideoElement): HTMLElement | null {
   const area = (player?.root.isConnected ? player.root : video).getBoundingClientRect();
   for (const sel of ANCHOR_SELECTORS) {
     for (const el of document.querySelectorAll<HTMLElement>(sel)) {
-      if (el.closest(".bcr-moon")) continue;
+      if (el.closest(".bcr-btn")) continue;
       const btn = el.closest<HTMLElement>('button, [role="button"]') ?? el;
       const r = btn.getBoundingClientRect();
       if (!hasSize(r)) continue;
@@ -121,63 +121,206 @@ function measureControls(p: Player): number {
   return Math.round(bottom - top + 8);
 }
 
-// ---------- Moon button ----------
+// ---------- Control-bar buttons ----------
 
-function moonSvg(filled: boolean, svgClass: string): string {
-  const fill = filled ? "currentColor" : "none";
-  return `<svg width="24" height="24" viewBox="0 0 24 24" class="${svgClass}" aria-hidden="true"><path d="${MOON_PATH}" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+interface ButtonSpec {
+  key: string;
+  label: string;
+  pressed: () => boolean;
+  icon: (pressed: boolean) => string; // inner SVG, 24x24; set fill on each shape
+  onClick: () => void;
 }
 
-function updateMoon(btn: HTMLElement, svgClass: string): void {
-  const pressed = String(cinema);
-  if (btn.getAttribute("aria-pressed") === pressed && btn.firstChild) return;
-  btn.setAttribute("aria-pressed", pressed);
-  btn.innerHTML = moonSvg(cinema, svgClass);
+const BUTTONS: ButtonSpec[] = [
+  {
+    key: "pip",
+    label: "Pop out player",
+    pressed: () => pip !== null,
+    icon: () =>
+      '<rect x="2" y="4" width="20" height="16" rx="2" fill="none"/>' +
+      '<rect x="12" y="11" width="7" height="6" rx="1" fill="currentColor" stroke="none"/>',
+    onClick: () => void togglePip(),
+  },
+  {
+    key: "cinema",
+    label: "Cinema mode",
+    pressed: () => cinema,
+    icon: (on) => `<path d="${MOON_PATH}" fill="${on ? "currentColor" : "none"}"/>`,
+    onClick: () => setCinema(!cinema),
+  },
+];
+
+function setIcon(btn: HTMLElement, spec: ButtonSpec, svgClass: string): void {
+  const pressed = spec.pressed();
+  if (btn.getAttribute("aria-pressed") === String(pressed) && btn.firstChild) return;
+  btn.setAttribute("aria-pressed", String(pressed));
+  btn.innerHTML =
+    `<svg width="24" height="24" viewBox="0 0 24 24" class="${svgClass}" stroke="currentColor" stroke-width="2" ` +
+    `stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${spec.icon(pressed)}</svg>`;
+}
+
+/** Re-renders the icons of our buttons inside `container` (wherever it lives). */
+function refreshButtons(container: ParentNode): void {
+  for (const btn of container.querySelectorAll<HTMLElement>("button[data-bcr]")) {
+    const spec = BUTTONS.find((b) => b.key === btn.dataset.bcr);
+    const svgClass = btn.querySelector("svg")?.getAttribute("class") ?? "";
+    if (spec) setIcon(btn, spec, svgClass);
+  }
 }
 
 /**
- * Adds the moon to the control row, cloning the anchor button's wrapper,
- * button and icon classes so it picks up the player's own sizing, hover and
- * responsive styles.
+ * Builds a button that clones the anchor button's wrapper, button and icon
+ * classes so it picks up the player's own sizing, hover and responsive styles.
  */
-function ensureMoon(anchor: HTMLElement): void {
-  // Each native button sits in its own single-child wrapper; the moon gets a
-  // matching wrapper placed before the anchor's.
+function makeButton(anchor: HTMLElement, slot: HTMLElement, spec: ButtonSpec): HTMLElement {
+  const btn = document.createElement("button");
+  btn.className = `${anchor.className} bcr-btn`;
+  btn.dataset.bcr = spec.key;
+  btn.setAttribute("type", "button");
+  btn.setAttribute("aria-label", spec.label);
+  btn.setAttribute("title", spec.label);
+  // Keep the player from treating clicks here as play/pause or fullscreen.
+  for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "dblclick"]) {
+    btn.addEventListener(type, (e) => e.stopPropagation());
+  }
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    spec.onClick();
+  });
+  // Rebuild the wrapper chain (e.g. div.kat:relative) around the button.
+  let node: HTMLElement = btn;
+  for (let n: HTMLElement | null = anchor.parentElement; n && n !== slot.parentElement; n = n.parentElement) {
+    const w = document.createElement(n.tagName);
+    w.className = n.className;
+    w.appendChild(node);
+    node = w;
+  }
+  node.dataset.bcrWrap = spec.key;
+  return node;
+}
+
+/** Keeps our buttons in the control row, in BUTTONS order, just before the anchor. */
+function ensureButtons(anchor: HTMLElement): void {
+  // Each native button sits in its own single-child wrapper; ours get matching
+  // wrappers placed before the anchor's.
   let slot: HTMLElement = anchor;
   while (slot.parentElement && slot.parentElement.children.length === 1) slot = slot.parentElement;
+  const row = slot.parentElement;
+  if (!row) return;
 
   const svgClass = anchor.querySelector("svg")?.getAttribute("class") ?? "";
-  let wrap = slot.previousElementSibling;
-  if (!(wrap instanceof HTMLElement && wrap.classList.contains("bcr-moon-wrap"))) {
-    document.querySelectorAll(".bcr-moon-wrap").forEach((b) => b.remove());
-    const btn = document.createElement("button");
-    btn.className = `${anchor.className} bcr-moon`;
-    btn.setAttribute("type", "button");
-    btn.setAttribute("aria-label", "Cinema mode");
-    btn.setAttribute("title", "Cinema mode");
-    // Keep the player from treating clicks here as play/pause or fullscreen.
-    for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "dblclick"]) {
-      btn.addEventListener(type, (e) => e.stopPropagation());
+  let next: Element = slot;
+  for (const spec of [...BUTTONS].reverse()) {
+    let wrap = next.previousElementSibling;
+    if (!(wrap instanceof HTMLElement && wrap.dataset.bcrWrap === spec.key)) {
+      document.querySelectorAll(`[data-bcr-wrap="${spec.key}"]`).forEach((b) => b.remove());
+      wrap = makeButton(anchor, slot, spec);
+      row.insertBefore(wrap, next);
     }
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setCinema(!cinema);
-    });
-    // Rebuild the wrapper chain (e.g. div.kat:relative) around the button.
-    let node: HTMLElement = btn;
-    for (let n: HTMLElement | null = anchor.parentElement; n && n !== slot.parentElement; n = n.parentElement) {
-      const w = document.createElement(n.tagName);
-      w.className = n.className;
-      w.appendChild(node);
-      node = w;
-    }
-    node.classList.add("bcr-moon-wrap");
-    slot.parentElement?.insertBefore(node, slot);
-    wrap = node;
+    const btn = wrap.querySelector<HTMLElement>("button[data-bcr]");
+    if (btn) setIcon(btn, spec, svgClass);
+    next = wrap;
   }
-  const moon = wrap.querySelector<HTMLElement>(".bcr-moon");
-  if (moon) updateMoon(moon, svgClass);
+}
+
+// ---------- Pop-out player (Document Picture-in-Picture) ----------
+
+interface DocumentPictureInPicture {
+  requestWindow(options?: { width?: number; height?: number }): Promise<Window>;
+}
+
+interface PipState {
+  win: Window;
+  root: HTMLElement;
+  placeholder: HTMLElement;
+}
+
+let pip: PipState | null = null;
+
+const PIP_CSS = `
+html, body { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+.bcr-in-pip { position: fixed !important; inset: 0 !important; width: 100% !important; height: 100% !important; }
+.bcr-btn[aria-pressed="true"] { color: #f47521 !important; }
+.bcr-btn svg { pointer-events: none; }
+/* Cinema mode and fullscreen don't apply inside the pop-out window. */
+[data-bcr-wrap="cinema"], .bcr-in-pip [data-testid="fullscreen-button"] { display: none !important; }
+`;
+
+/** Copies the page's stylesheets so the player keeps its look in the pop-out window. */
+function copyStyles(target: Document): void {
+  for (const sheet of document.styleSheets) {
+    try {
+      const style = target.createElement("style");
+      style.textContent = [...sheet.cssRules].map((r) => r.cssText).join("\n");
+      target.head.append(style);
+    } catch {
+      // Cross-origin sheet without CORS: let the window load it itself.
+      if (!sheet.href) continue;
+      const link = target.createElement("link");
+      link.rel = "stylesheet";
+      link.href = sheet.href;
+      target.head.append(link);
+    }
+  }
+  const own = target.createElement("style");
+  own.textContent = PIP_CSS;
+  target.head.append(own);
+}
+
+/**
+ * Moves the whole player (video, subtitle layer and controls) into an
+ * always-on-top Document Picture-in-Picture window, leaving a placeholder in
+ * the page, and moves it back when that window closes. Plain video PiP can't
+ * be used because Crunchyroll draws subtitles in the DOM, not as text tracks.
+ */
+async function togglePip(): Promise<void> {
+  if (pip) {
+    pip.win.close(); // "pagehide" puts the player back
+    return;
+  }
+  if (!player) return;
+  const { root, video } = player;
+  const api = (window as unknown as { documentPictureInPicture?: DocumentPictureInPicture }).documentPictureInPicture;
+  if (!api) {
+    // Older Chrome: fall back to plain video PiP (no subtitles).
+    await video.requestPictureInPicture();
+    return;
+  }
+
+  const aspect = video.videoWidth && video.videoHeight ? video.videoWidth / video.videoHeight : 16 / 9;
+  const width = 640;
+  const win = await api.requestWindow({ width, height: Math.round(width / aspect) });
+  copyStyles(win.document);
+  win.document.documentElement.className = document.documentElement.className.replace("bcr-cinema", "");
+  win.document.title = document.title;
+
+  const wasPlaying = !video.paused;
+  const placeholder = document.createElement("div");
+  placeholder.className = "bcr-pip-placeholder";
+  placeholder.textContent = "Playing in pop-out window";
+  pip = { win, root, placeholder };
+  sync(); // drop cinema-mode styling before measuring the in-page size
+  placeholder.style.height = `${root.getBoundingClientRect().height}px`;
+  root.before(placeholder);
+  win.document.body.append(root);
+  root.classList.add("bcr-in-pip");
+  refreshButtons(root);
+  if (wasPlaying && video.paused) void video.play();
+
+  win.addEventListener(
+    "pagehide",
+    () => {
+      const playing = !video.paused;
+      placeholder.replaceWith(root);
+      root.classList.remove("bcr-in-pip");
+      pip = null;
+      refreshButtons(root);
+      sync();
+      if (playing && video.paused) void video.play();
+    },
+    { once: true },
+  );
 }
 
 // ---------- Player layout ----------
@@ -210,7 +353,7 @@ function updateLayout(): void {
 function applyPlayer(): void {
   const media = new Set<Element>();
   let controls: Element | null = null;
-  if (cinema && player) {
+  if (cinema && player && !pip) {
     const { root, anchor } = player;
     root.classList.add("bcr-root");
     for (const child of root.children) {
@@ -227,7 +370,7 @@ function applyPlayer(): void {
     if (el !== controls) el.classList.remove("bcr-controls");
   });
   controls?.classList.add("bcr-controls");
-  if (!cinema || !player) {
+  if (!cinema || !player || pip) {
     document.querySelectorAll(".bcr-root").forEach((el) => el.classList.remove("bcr-root"));
   }
 }
@@ -235,7 +378,7 @@ function applyPlayer(): void {
 // ---------- Page: fill viewport + darken ----------
 
 function applyPage(): void {
-  const target = cinema && location.pathname.includes("/watch") ? (player?.root ?? null) : null;
+  const target = cinema && !pip && location.pathname.includes("/watch") ? (player?.root ?? null) : null;
   document.querySelectorAll(".bcr-fill").forEach((el) => {
     if (el !== target) el.classList.remove("bcr-fill");
   });
@@ -274,7 +417,7 @@ function sync(): void {
       resizeObserver = new ResizeObserver(() => cinema && updateLayout());
       resizeObserver.observe(root);
     }
-    ensureMoon(anchor);
+    ensureButtons(anchor);
   } else if (player && !player.root.isConnected) {
     player = null;
     resizeObserver?.disconnect();

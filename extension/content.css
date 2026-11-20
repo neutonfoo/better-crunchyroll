@@ -1,6 +1,17 @@
-/* ---- Moon button: styled by the player's own classes, cloned at runtime ---- */
-.bcr-moon[aria-pressed="true"] { color: #f47521 !important; }
-.bcr-moon svg { pointer-events: none; }
+/* ---- Our control-bar buttons: styled by the player's own classes, cloned at runtime ---- */
+.bcr-btn[aria-pressed="true"] { color: #f47521 !important; }
+.bcr-btn svg { pointer-events: none; }
+
+/* ---- Stand-in left in the page while the player is popped out ---- */
+.bcr-pip-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: #000;
+  color: #a0a0a0;
+  font: 600 16px/1.4 system-ui, sans-serif;
+}
 
 /* ---- Player: pinned to the viewport ---- */
 .bcr-fill {
