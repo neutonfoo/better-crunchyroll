@@ -1,6 +1,6 @@
 # Better Crunchyroll
 
-![Cinema mode: full-width video with the controls below the picture](docs/cinema-mode.jpg)
+![Cinema mode: full-width video with the controls below the picture](docs/cinema-mode.png)
 
 A small Chrome extension that improves the Crunchyroll web player. It adds two buttons to the player's control bar, styled to match the native ones:
 
