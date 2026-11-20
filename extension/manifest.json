@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Better Crunchyroll",
+  "version": "0.1.0",
+  "description": "Adds a cinema mode to the Crunchyroll player.",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.crunchyroll.com/*", "https://static.crunchyroll.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "all_frames": true,
+      "match_about_blank": true,
+      "run_at": "document_idle"
+    }
+  ]
+}

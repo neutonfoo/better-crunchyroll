@@ -1,0 +1,53 @@
+/* ---- Moon button (lives in the player's control bar) ---- */
+.bcr-moon {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0.9;
+}
+.bcr-moon:hover { opacity: 1; }
+.bcr-moon svg { width: 60%; height: 60%; pointer-events: none; }
+.bcr-moon[aria-pressed="true"] { color: #f47521; }
+
+/* ---- Player: pinned to the viewport ---- */
+.bcr-fill {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  z-index: 2147483000 !important;
+  background: #000 !important;
+}
+
+/* ---- Player: centred picture, overlay controls lifted to sit just below it ---- */
+.bcr-root { background: #000 !important; }
+.bcr-media {
+  transform: scale(var(--bcr-scale, 1)) !important;
+  transform-origin: 50% 50% !important;
+  transition: transform 0.25s ease !important;
+}
+.bcr-controls {
+  transform: translateY(var(--bcr-lift, 0px)) !important;
+  transition: transform 0.25s ease !important;
+}
+
+/* ---- Page: darken everything that isn't the player ---- */
+html.bcr-cinema,
+html.bcr-cinema body {
+  background: #000 !important;
+  overflow: hidden !important;
+}
+.bcr-dim {
+  opacity: 0.05 !important;
+  transition: opacity 0.3s ease !important;
+}
