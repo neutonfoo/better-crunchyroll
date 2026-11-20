@@ -10,7 +10,7 @@
 //     picture is centred when there is room, or moved up to leave a strip for
 //     the controls when there isn't,
 //   - the controls layer is shifted so the bottom controls sit right under the
-//     picture, and kept visible instead of auto-hiding,
+//     picture (they still auto-hide like the native player),
 //   - the page behind is darkened by dimming every sibling along the path from
 //     the player up to <body>, which avoids fighting the site's z-index stacking.
 
