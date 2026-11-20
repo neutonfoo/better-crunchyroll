@@ -1,4 +1,8 @@
-# Better Crunchyroll
+<p align="center">
+  <img src="icons/icon.svg" width="112" alt="Better Crunchyroll icon: a sleepy crescent moon holding a play button">
+</p>
+
+<h1 align="center">Better Crunchyroll</h1>
 
 ![Cinema mode: full-width video with the controls below the picture](docs/cinema-mode.png)
 
