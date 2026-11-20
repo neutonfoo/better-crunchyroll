@@ -241,6 +241,10 @@ let pip: PipState | null = null;
 const PIP_CSS = `
 html, body { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
 .bcr-in-pip { position: fixed !important; inset: 0 !important; width: 100% !important; height: 100% !important; }
+/* Same picture-above-controls layout as cinema mode (see updateLayout). */
+.bcr-root { background: #000 !important; }
+.bcr-media { transform: translateY(var(--bcr-shift, 0px)) !important; }
+.bcr-controls { transform: translateY(var(--bcr-lift, 0px)) !important; }
 .bcr-btn[aria-pressed="true"] { color: #f47521 !important; }
 .bcr-btn svg { pointer-events: none; }
 /* Cinema mode and fullscreen don't apply inside the pop-out window. */
@@ -289,8 +293,10 @@ async function togglePip(): Promise<void> {
   }
 
   const aspect = video.videoWidth && video.videoHeight ? video.videoWidth / video.videoHeight : 16 / 9;
+  // Size the window so the picture fills its width with the controls strip below.
   const width = 640;
-  const win = await api.requestWindow({ width, height: Math.round(width / aspect) });
+  const strip = measureControls(player) || controlsHeight || DEFAULT_CONTROLS_HEIGHT;
+  const win = await api.requestWindow({ width, height: Math.round(width / aspect + strip) });
   copyStyles(win.document);
   win.document.documentElement.className = document.documentElement.className.replace("bcr-cinema", "");
   win.document.title = document.title;
@@ -306,6 +312,9 @@ async function togglePip(): Promise<void> {
   win.document.body.append(root);
   root.classList.add("bcr-in-pip");
   refreshButtons(root);
+  sync(); // applies the picture-above-controls layout inside the window
+  // A ResizeObserver from this page may not see resizes in the other window.
+  win.addEventListener("resize", updateLayout);
   if (wasPlaying && video.paused) void video.play();
 
   win.addEventListener(
@@ -353,7 +362,7 @@ function updateLayout(): void {
 function applyPlayer(): void {
   const media = new Set<Element>();
   let controls: Element | null = null;
-  if (cinema && player && !pip) {
+  if ((cinema || pip) && player) {
     const { root, anchor } = player;
     root.classList.add("bcr-root");
     for (const child of root.children) {
@@ -370,7 +379,7 @@ function applyPlayer(): void {
     if (el !== controls) el.classList.remove("bcr-controls");
   });
   controls?.classList.add("bcr-controls");
-  if (!cinema || !player || pip) {
+  if (!(cinema || pip) || !player) {
     document.querySelectorAll(".bcr-root").forEach((el) => el.classList.remove("bcr-root"));
   }
 }
@@ -414,7 +423,7 @@ function sync(): void {
     if (root && (root !== player?.root || anchor !== player.anchor || video !== player.video)) {
       player = { root, anchor, video };
       resizeObserver?.disconnect();
-      resizeObserver = new ResizeObserver(() => cinema && updateLayout());
+      resizeObserver = new ResizeObserver(() => (cinema || pip) && updateLayout());
       resizeObserver.observe(root);
     }
     ensureButtons(anchor);
