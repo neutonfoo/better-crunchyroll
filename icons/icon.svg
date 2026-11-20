@@ -10,13 +10,13 @@
       <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.38"/>
       <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="moon" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="cream" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#FFFBF4"/>
       <stop offset="1" stop-color="#FFE3CF"/>
     </linearGradient>
     <mask id="crescent">
-      <circle cx="60" cy="66" r="31" fill="#fff"/>
-      <circle cx="75" cy="54" r="27" fill="#000"/>
+      <circle cx="58" cy="64" r="36" fill="#fff"/>
+      <circle cx="76" cy="56" r="29" fill="#000"/>
     </mask>
     <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
       <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#8A2A0A" flood-opacity="0.3"/>
@@ -26,11 +26,11 @@
   <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#sky)"/>
   <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#glow)"/>
 
+  <!-- Sleepy crescent cradling a play button -->
   <g filter="url(#soft)">
-    <rect x="0" y="0" width="128" height="128" fill="url(#moon)" mask="url(#crescent)"/>
+    <rect width="128" height="128" fill="url(#cream)" mask="url(#crescent)"/>
+    <path d="M71 47 L71 69 L89 58 Z" fill="url(#cream)" stroke="#FFF6EC" stroke-width="6" stroke-linejoin="round"/>
   </g>
-
-  <circle cx="90" cy="40" r="3.2" fill="#FFF7EE" opacity="0.95"/>
-  <circle cx="99" cy="56" r="1.9" fill="#FFF7EE" opacity="0.8"/>
-  <circle cx="80" cy="28" r="1.5" fill="#FFF7EE" opacity="0.7"/>
+  <path d="M33 66 Q38 71 43 66" fill="none" stroke="#C7461A" stroke-width="3.6" stroke-linecap="round"/>
+  <ellipse cx="35" cy="78" rx="4.5" ry="3" fill="#FF8F6B" opacity="0.75"/>
 </svg>
